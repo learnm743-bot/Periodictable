@@ -346,6 +346,60 @@
       .floating-extra { opacity: .14; }
     }
 
+  
+    .kid-badge {
+      width: fit-content;
+      margin: 0 auto 16px;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.11);
+      border: 1px solid rgba(255,255,255,.2);
+      color: #ffda52;
+      font-size: .9rem;
+      font-weight: 700;
+      box-shadow: 0 8px 25px rgba(0,0,0,.18);
+      animation: badgeBounce 3s ease-in-out infinite;
+    }
+
+    @keyframes badgeBounce {
+      50% { transform: translateY(-4px) rotate(-1deg); }
+    }
+
+    .floating-extra {
+      text-shadow: 0 0 18px rgba(255,255,255,.35);
+    }
+
+    .element.pop-open {
+      animation: elementPop .45s ease;
+    }
+
+    @keyframes elementPop {
+      0% { transform: scale(1); }
+      45% { transform: scale(1.14) rotate(-2deg); }
+      100% { transform: scale(1); }
+    }
+
+    .flashcard-top::after {
+      content: "✨ WOW!";
+      position: absolute;
+      right: 22px;
+      bottom: 18px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.48);
+      font-size: .72rem;
+      font-weight: 800;
+    }
+
+    .detail-box {
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .detail-box:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(60,40,120,.10);
+    }
+
   </style>
 </head>
 <body>
@@ -411,6 +465,7 @@
 <body>
   <div class="stars"></div>
   <div id="floaterLayer" aria-hidden="true"></div>
+  <div class="kid-badge">🌈 Chemistry is hiding everywhere!</div>
 
   <header>
     <div class="space-item rocket">🚀</div>
@@ -421,7 +476,7 @@
     <h1>Periodic <span>Space</span> Explorers</h1>
     <p>
       Explore all 118 elements! Click one to unlock a kid-friendly fact,
-      discover its superpower, and find out where it appears in the world around you.
+      discover its superpower, and find out where it appears in bananas, rockets, light bulbs, phones, toys, food, and even your own body!
     </p>
   </header>
 
@@ -1273,6 +1328,12 @@ const kidData = {
     });
 
     function openElement(symbol, name, atomicNumber, type) {
+      const clickedButton = buttons.find(b => b.dataset.symbol === symbol);
+      if (clickedButton) {
+        clickedButton.classList.remove("pop-open");
+        void clickedButton.offsetWidth;
+        clickedButton.classList.add("pop-open");
+      }
       const d = kidData[symbol] || {
         emoji: "🔭",
         fact: `${name} is element number ${atomicNumber}. Scientists use the periodic table as a map of the building blocks of matter!`,
@@ -1368,7 +1429,13 @@ const kidData = {
     }
 
     // Extra floating chemistry/space objects.
-    const floaters = ["⚛️","🧪","🔬","🧬","🪐","🚀","⭐","🌙","🧲","💎","🧫","☄️","👾","🛰️","✨","🌈"];
+    const floaters = [
+      "⚛️","🧪","🔬","🧬","🪐","🚀","⭐","🌙",
+      "🧲","💎","🧫","☄️","👾","🛰️","✨","🌈",
+      "🍌","💡","📱","🎈","🦴","🥛","🍎","🚲",
+      "✈️","🎨","🧸","🎮","🔋","⚡","🌱","🧊",
+      "🪁","🧠","🧲","🔭","🌟","🧪","🚀","🍭"
+    ];
     const floaterLayer = document.querySelector("#floaterLayer");
     floaters.forEach((emoji, i) => {
       const el = document.createElement("span");
