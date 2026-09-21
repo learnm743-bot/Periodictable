@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Periodic Space Explorers</title>
+  <style>
+    @import url("https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap");
+
+    :root {
+      --space: #070a20;
+      --space-blue: #101a42;
+      --purple: #31145d;
+      --text: #f7f5ff;
+      --muted: #c7c2e7;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: Fredoka, Arial, sans-serif;
+      background:
+        radial-gradient(circle at 15% 5%, #35318f 0, transparent 24rem),
+        radial-gradient(circle at 90% 30%, #511d73 0, transparent 28rem),
+        radial-gradient(circle at 50% 100%, #0e4c78 0, transparent 30rem),
+        var(--space);
+      overflow-x: hidden;
+    }
+
+    .stars,
+    .stars::before,
+    .stars::after {
+      position: fixed;
+      inset: 0;
+      content: "";
+      pointer-events: none;
+      background-image:
+        radial-gradient(white 1px, transparent 1px),
+        radial-gradient(#c8aaff 1px, transparent 1px);
+      background-size: 48px 48px, 91px 91px;
+      background-position: 0 0, 22px 33px;
+      opacity: .55;
+      z-index: -1;
+    }
+
+    .stars::before { transform: rotate(24deg); opacity: .35; }
+    .stars::after { transform: rotate(-12deg); opacity: .25; }
+
+    header {
+      width: min(1200px, 92%);
+      margin: 0 auto;
+      padding: 56px 0 26px;
+      text-align: center;
+      position: relative;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 7vw, 5rem);
+      line-height: .95;
+      letter-spacing: -2px;
+    }
+
+    h1 span { color: #ffda52; }
+
+    header p {
+      max-width: 650px;
+      color: var(--muted);
+      margin: 20px auto 0;
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      line-height: 1.55;
+    }
+
+    .space-item {
+      position: absolute;
+      user-select: none;
+      filter: drop-shadow(0 0 16px rgba(255,255,255,.25));
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .rocket { left: 3%; top: 50px; font-size: 4rem; transform: rotate(-20deg); }
+    .astronaut { right: 3%; top: 42px; font-size: 4rem; animation-delay: .7s; }
+    .planet { left: 13%; bottom: -12px; font-size: 3rem; animation-delay: 1.3s; }
+    .alien { right: 15%; bottom: -20px; font-size: 2.8rem; animation-delay: 2s; }
+
+    @keyframes float {
+      50% { translate: 0 -13px; rotate: 3deg; }
+    }
+
+    .legend {
+      width: min(1160px, 94%);
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 9px;
+      margin: 6px auto 24px;
+    }
+
+    .legend span {
+      padding: 7px 11px;
+      border-radius: 99px;
+      color: #11152e;
+      font-size: .78rem;
+      font-weight: 700;
+    }
+
+    .table-wrap {
+      width: min(1240px, 98%);
+      margin: auto;
+      padding: 18px;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 22px;
+      background: rgba(7, 10, 32, .65);
+      box-shadow: 0 18px 60px rgba(0,0,0,.3);
+      overflow-x: auto;
+    }
+
+    .periodic-table {
+      display: grid;
+      grid-template-columns: repeat(18, minmax(52px, 1fr));
+      grid-template-rows: repeat(10, 66px);
+      gap: 5px;
+      min-width: 1040px;
+    }
+
+    .element {
+      grid-column: var(--col);
+      grid-row: var(--row);
+      border: 0;
+      border-radius: 9px;
+      background: var(--color);
+      color: #11152e;
+      cursor: pointer;
+      padding: 5px 6px;
+      text-align: left;
+      font-family: inherit;
+      box-shadow: inset 0 -4px rgba(0,0,0,.14), 0 3px 7px rgba(0,0,0,.2);
+      transition: transform .16s ease, filter .16s ease;
+    }
+
+    .element:hover,
+    .element:focus {
+      transform: translateY(-5px) scale(1.06);
+      filter: brightness(1.12);
+      outline: 3px solid white;
+      z-index: 3;
+    }
+
+    .number { display: block; font-size: .65rem; font-weight: 700; }
+    .symbol { display: block; font-size: 1.55rem; font-weight: 700; line-height: 1.05; }
+    .name { display: block; font-size: .62rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .lanthanide-label,
+    .actinide-label {
+      align-self: center;
+      color: #d9d3ff;
+      font-size: .7rem;
+      font-weight: 600;
+      text-align: right;
+      padding-right: 8px;
+    }
+
+    .lanthanide-label { grid-row: 9; grid-column: 1 / 3; }
+    .actinide-label { grid-row: 10; grid-column: 1 / 3; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(1, 2, 15, .78);
+      backdrop-filter: blur(8px);
+      z-index: 10;
+    }
+
+    .modal.open { display: grid; }
+
+    .flashcard {
+      width: min(510px, 100%);
+      position: relative;
+      overflow: hidden;
+      border: 2px solid rgba(255,255,255,.4);
+      border-radius: 26px;
+      color: #10152f;
+      background: #f9f7ff;
+      box-shadow: 0 25px 90px #000;
+    }
+
+    .flashcard-top {
+      min-height: 180px;
+      padding: 28px;
+      color: #10152f;
+      background: var(--card-color);
+    }
+
+    .close {
+      position: absolute;
+      right: 16px;
+      top: 14px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      background: rgba(255,255,255,.75);
+      color: #11152e;
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .flash-symbol { font-size: 5.5rem; line-height: .8; font-weight: 700; }
+    .flash-name { margin: 10px 0 0; font-size: 2rem; }
+    .flash-number { margin: 4px 0 0; font-weight: 600; }
+
+    .flashcard-body { padding: 26px 30px 32px; }
+    .fact-label { color: #6539a2; font-size: .78rem; font-weight: 700; letter-spacing: 1.4px; }
+    .flashcard-body p { margin: 8px 0 0; font-size: 1.15rem; line-height: 1.55; }
+    .fun-emoji { font-size: 2.7rem; margin-top: 18px; }
+
+    footer {
+      padding: 46px 20px 30px;
+      color: var(--muted);
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    @media (max-width: 650px) {
+      header { padding-top: 74px; }
+      .rocket { left: 6%; top: 13px; font-size: 2.5rem; }
+      .astronaut { right: 6%; top: 12px; font-size: 2.5rem; }
+      .planet, .alien { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+
+  <header>
+    <div class="space-item rocket">🚀</div>
+    <div class="space-item astronaut">👩🏽‍🚀</div>
+    <div class="space-item planet">🪐</div>
+    <div class="space-item alien">👾</div>
+
+    <h1>Periodic <span>Space</span> Explorers</h1>
+    <p>
+      Click an element to unlock its cosmic flashcard. Every tiny element
+      helps build the amazing universe around us!
+    </p>
+  </header>
+
+  <div class="legend">
+    <span style="background:#ffb0a3">Reactive metals</span>
+    <span style="background:#ffd36a">Other metals</span>
+    <span style="background:#94e5bd">Metalloids</span>
+    <span style="background:#7ee0ee">Nonmetals</span>
+    <span style="background:#bda4ff">Noble gases</span>
+    <span style="background:#ff9fd1">Lanthanides</span>
+    <span style="background:#a9b8ff">Actinides</span>
+  </div>
+
+  <main class="table-wrap">
+    <section class="periodic-table" id="periodicTable" aria-label="Periodic table"></section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Element flashcard">
+    <article class="flashcard" id="flashcard">
+      <button class="close" id="closeModal" aria-label="Close flashcard">×</button>
+      <div class="flashcard-top">
+        <div class="flash-symbol" id="flashSymbol"></div>
+        <h2 class="flash-name" id="flashName"></h2>
+        <p class="flash-number" id="flashNumber"></p>
+      </div>
+      <div class="flashcard-body">
+        <div class="fact-label">SPACE EXPLORER FACT</div>
+        <p id="flashFact"></p>
+        <div class="fun-emoji" id="flashEmoji"></div>
+      </div>
+    </article>
+  </div>
+
+  <footer>Made for young scientists, star-gazers, and question-askers. ✨</footer>
+
+  <script>
+    const colors = {
+      metal: "#ffb0a3",
+      otherMetal: "#ffd36a",
+      metalloid: "#94e5bd",
+      nonmetal: "#7ee0ee",
+      noble: "#bda4ff",
+      lanthanide: "#ff9fd1",
+      actinide: "#a9b8ff"
+    };
+
+    const facts = {
+      H: ["Hydrogen is the most common element in the whole universe. Our Sun is mostly made from it!", "☀️"],
+      He: ["Helium makes balloons float because it is lighter than the air around us.", "🎈"],
+      C: ["Carbon is in bananas, pencils, your body, and even diamonds. One element can be many amazing things!", "🍌💎"],
+      N: ["About 78% of the air is nitrogen. Plants need it to grow big and green.", "🌱"],
+      O: ["You breathe oxygen every second. It helps your body turn food into energy for running and playing!", "🌬️"],
+      F: ["Fluorine is used in toothpaste to help make teeth stronger.", "🦷"],
+      Ne: ["Neon glows bright orange-red in signs. It is a favorite element for colorful city lights!", "💡"],
+      Na: ["Sodium joins chlorine to make table salt. By itself, sodium is a shiny metal that reacts with water!", "🧂"],
+      Mg: ["Magnesium makes a brilliant white light in fireworks and sparklers.", "🎆"],
+      Al: ["Aluminum is used in foil, soda cans, and airplanes because it is light but strong.", "🥫"],
+      Si: ["Silicon is found in sand and is used to make computer chips.", "🏖️💻"],
+      P: ["Phosphorus helps make matches light up and is also important for strong bones.", "🔥"],
+      S: ["Sulfur can be found near volcanoes and sometimes smells like rotten eggs!", "🌋"],
+      Cl: ["Chlorine helps keep swimming pools clean. Mixed with sodium, it becomes ordinary table salt.", "🏊"],
+      Ar: ["Argon is used inside some light bulbs to help the glowing wire last longer.", "💡"],
+      K: ["Potassium is in bananas and helps your muscles move.", "🍌"],
+      Ca: ["Calcium helps build your bones and teeth. Milk and cheese are full of it!", "🥛"],
+      Fe: ["Iron is in your blood and helps carry oxygen around your body. It is also used to build bridges!", "🩸🌉"],
+      Cu: ["Copper carries electricity through wires. Old copper can turn green, like the Statue of Liberty.", "⚡🗽"],
+      Zn: ["Zinc helps your body heal cuts and is used to protect metal from rust.", "🩹"],
+      Ag: ["Silver is shiny and helps electricity move. It is used in jewelry and some solar panels.", "🥈"],
+      I: ["Iodine is important for your body and is often added to table salt.", "🧂"],
+      Au: ["Gold is so bendy that one tiny piece can be stretched into an incredibly long wire!", "👑"],
+      Hg: ["Mercury is a metal that is liquid at room temperature. It is interesting, but never safe to touch.", "🌡️"],
+      Pb: ["Pencil “lead” is not lead at all—it is actually carbon called graphite!", "✏️"],
+      U: ["A tiny amount of uranium can hold a huge amount of energy. Scientists use it very carefully.", "⚛️"]
+    };
+
+    const raw = [
+      ["H","Hydrogen",1,1,"nonmetal"],["He","Helium",1,18,"noble"],
+      ["Li","Lithium",2,1,"metal"],["Be","Beryllium",2,2,"metal"],["B","Boron",2,13,"metalloid"],["C","Carbon",2,14,"nonmetal"],["N","Nitrogen",2,15,"nonmetal"],["O","Oxygen",2,16,"nonmetal"],["F","Fluorine",2,17,"nonmetal"],["Ne","Neon",2,18,"noble"],
+      ["Na","Sodium",3,1,"metal"],["Mg","Magnesium",3,2,"metal"],["Al","Aluminum",3,13,"otherMetal"],["Si","Silicon",3,14,"metalloid"],["P","Phosphorus",3,15,"nonmetal"],["S","Sulfur",3,16,"nonmetal"],["Cl","Chlorine",3,17,"nonmetal"],["Ar","Argon",3,18,"noble"],
+      ["K","Potassium",4,1,"metal"],["Ca","Calcium",4,2,"metal"],["Sc","Scandium",4,3,"otherMetal"],["Ti","Titanium",4,4,"otherMetal"],["V","Vanadium",4,5,"otherMetal"],["Cr","Chromium",4,6,"otherMetal"],["Mn","Manganese",4,7,"otherMetal"],["Fe","Iron",4,8,"otherMetal"],["Co","Cobalt",4,9,"otherMetal"],["Ni","Nickel",4,10,"otherMetal"],["Cu","Copper",4,11,"otherMetal"],["Zn","Zinc",4,12,"otherMetal"],["Ga","Gallium",4,13,"otherMetal"],["Ge","Germanium",4,14,"metalloid"],["As","Arsenic",4,15,"metalloid"],["Se","Selenium",4,16,"nonmetal"],["Br","Bromine",4,17,"nonmetal"],["Kr","Krypton",4,18,"noble"],
+      ["Rb","Rubidium",5,1,"metal"],["Sr","Strontium",5,2,"metal"],["Y","Yttrium",5,3,"otherMetal"],["Zr","Zirconium",5,4,"otherMetal"],["Nb","Niobium",5,5,"otherMetal"],["Mo","Molybdenum",5,6,"otherMetal"],["Tc","Technetium",5,7,"otherMetal"],["Ru","Ruthenium",5,8,"otherMetal"],["Rh","Rhodium",5,9,"otherMetal"],["Pd","Palladium",5,10,"otherMetal"],["Ag","Silver",5,11,"otherMetal"],["Cd","Cadmium",5,12,"otherMetal"],["In","Indium",5,13,"otherMetal"],["Sn","Tin",5,14,"otherMetal"],["Sb","Antimony",5,15,"metalloid"],["Te","Tellurium",5,16,"metalloid"],["I","Iodine",5,17,"nonmetal"],["Xe","Xenon",5,18,"noble"],
+      ["Cs","Cesium",6,1,"metal"],["Ba","Barium",6,2,"metal"],["La","Lanthanum",6,3,"lanthanide"],["Hf","Hafnium",6,4,"otherMetal"],["Ta","Tantalum",6,5,"otherMetal"],["W","Tungsten",6,6,"otherMetal"],["Re","Rhenium",6,7,"otherMetal"],["Os","Osmium",6,8,"otherMetal"],["Ir","Iridium",6,9,"otherMetal"],["Pt","Platinum",6,10,"otherMetal"],["Au","Gold",6,11,"otherMetal"],["Hg","Mercury",6,12,"otherMetal"],["Tl","Thallium",6,13,"otherMetal"],["Pb","Lead",6,14,"otherMetal"],["Bi","Bismuth",6,15,"otherMetal"],["Po","Polonium",6,16,"metalloid"],["At","Astatine",6,17,"metalloid"],["Rn","Radon",6,18,"noble"],
+      ["Fr","Francium",7,1,"metal"],["Ra","Radium",7,2,"metal"],["Ac","Actinium",7,3,"actinide"],["Rf","Rutherfordium",7,4,"otherMetal"],["Db","Dubnium",7,5,"otherMetal"],["Sg","Seaborgium",7,6,"otherMetal"],["Bh","Bohrium",7,7,"otherMetal"],["Hs","Hassium",7,8,"otherMetal"],["Mt","Meitnerium",7,9,"otherMetal"],["Ds","Darmstadtium",7,10,"otherMetal"],["Rg","Roentgenium",7,11,"otherMetal"],["Cn","Copernicium",7,12,"otherMetal"],["Nh","Nihonium",7,13,"otherMetal"],["Fl","Flerovium",7,14,"otherMetal"],["Mc","Moscovium",7,15,"otherMetal"],["Lv","Livermorium",7,16,"otherMetal"],["Ts","Tennessine",7,17,"nonmetal"],["Og","Oganesson",7,18,"noble"],
+      ["Ce","Cerium",9,4,"lanthanide"],["Pr","Praseodymium",9,5,"lanthanide"],["Nd","Neodymium",9,6,"lanthanide"],["Pm","Promethium",9,7,"lanthanide"],["Sm","Samarium",9,8,"lanthanide"],["Eu","Europium",9,9,"lanthanide"],["Gd","Gadolinium",9,10,"lanthanide"],["Tb","Terbium",9,11,"lanthanide"],["Dy","Dysprosium",9,12,"lanthanide"],["Ho","Holmium",9,13,"lanthanide"],["Er","Erbium",9,14,"lanthanide"],["Tm","Thulium",9,15,"lanthanide"],["Yb","Ytterbium",9,16,"lanthanide"],["Lu","Lutetium",9,17,"lanthanide"],
+      ["Th","Thorium",10,4,"actinide"],["Pa","Protactinium",10,5,"actinide"],["U","Uranium",10,6,"actinide"],["Np","Neptunium",10,7,"actinide"],["Pu","Plutonium",10,8,"actinide"],["Am","Americium",10,9,"actinide"],["Cm","Curium",10,10,"actinide"],["Bk","Berkelium",10,11,"actinide"],["Cf","Californium",10,12,"actinide"],["Es","Einsteinium",10,13,"actinide"],["Fm","Fermium",10,14,"actinide"],["Md","Mendelevium",10,15,"actinide"],["No","Nobelium",10,16,"actinide"],["Lr","Lawrencium",10,17,"actinide"]
+    ];
+
+    const table = document.querySelector("#periodicTable");
+    const modal = document.querySelector("#modal");
+    const flashcard = document.querySelector("#flashcard");
+
+    const label1 = document.createElement("div");
+    label1.className = "lanthanide-label";
+    label1.textContent = "Lanthanides →";
+    table.appendChild(label1);
+
+    const label2 = document.createElement("div");
+    label2.className = "actinide-label";
+    label2.textContent = "Actinides →";
+    table.appendChild(label2);
+
+    raw.forEach(([symbol, name, row, col, type], index) => {
+      const atomicNumber = index + 1;
+      const button = document.createElement("button");
+
+      button.className = "element";
+      button.style.setProperty("--row", row);
+      button.style.setProperty("--col", col);
+      button.style.setProperty("--color", colors[type]);
+      button.innerHTML = `
+        <span class="number">${atomicNumber}</span>
+        <span class="symbol">${symbol}</span>
+        <span class="name">${name}</span>
+      `;
+
+      button.addEventListener("click", () => {
+        const customFact = facts[symbol];
+        const fact = customFact
+          ? customFact[0]
+          : `${name} is element number ${atomicNumber}. Scientists use the periodic table like a giant map for discovering what everything is made of!`;
+        const emoji = customFact ? customFact[1] : "🔭";
+
+        flashcard.style.setProperty("--card-color", colors[type]);
+        document.querySelector("#flashSymbol").textContent = symbol;
+        document.querySelector("#flashName").textContent = name;
+        document.querySelector("#flashNumber").textContent = `Atomic number ${atomicNumber}`;
+        document.querySelector("#flashFact").textContent = fact;
+        document.querySelector("#flashEmoji").textContent = emoji;
+        modal.classList.add("open");
+      });
+
+      table.appendChild(button);
+    });
+
+    function closeModal() {
+      modal.classList.remove("open");
+    }
+
+    document.querySelector("#closeModal").addEventListener("click", closeModal);
+    modal.addEventListener("click", (event) => {
+      if (event.target === modal) closeModal();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeModal();
+    });
+  </script>
+</body>
+</html>
