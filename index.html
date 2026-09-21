@@ -235,6 +235,117 @@
       .astronaut { right: 6%; top: 12px; font-size: 2.5rem; }
       .planet, .alien { display: none; }
     }
+
+    .toolbar {
+      width: min(1160px, 94%);
+      margin: 4px auto 18px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    .toolbar input {
+      width: min(420px, 100%);
+      padding: 13px 18px;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      color: white;
+      font: inherit;
+      outline: none;
+      backdrop-filter: blur(8px);
+    }
+    .toolbar input::placeholder { color: #c7c2e7; }
+    .tool-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 17px;
+      cursor: pointer;
+      font: 700 .92rem Fredoka, sans-serif;
+      color: #17142e;
+      background: #ffda52;
+      box-shadow: 0 5px 18px rgba(0,0,0,.22);
+      transition: transform .15s ease, filter .15s ease;
+    }
+    .tool-btn:hover { transform: translateY(-3px); filter: brightness(1.08); }
+    .element.dimmed { opacity: .15; transform: scale(.94); }
+    .element.found { outline: 3px solid #fff; animation: pulseFound 1s ease infinite alternate; }
+    @keyframes pulseFound { to { filter: brightness(1.25); } }
+
+    .floating-extra {
+      position: fixed;
+      z-index: -1;
+      pointer-events: none;
+      user-select: none;
+      font-size: clamp(1.5rem, 3vw, 2.8rem);
+      opacity: .22;
+      filter: drop-shadow(0 0 14px rgba(255,255,255,.25));
+      animation: cosmicFloat var(--duration) ease-in-out var(--delay) infinite;
+    }
+    @keyframes cosmicFloat {
+      0%,100% { transform: translate(0, 0) rotate(-5deg); }
+      50% { transform: translate(var(--drift), -28px) rotate(8deg); }
+    }
+
+    .flashcard-body {
+      max-height: 68vh;
+      overflow-y: auto;
+    }
+    .detail-box {
+      margin-top: 17px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #eeeafd;
+    }
+    .detail-box strong {
+      display: block;
+      color: #6539a2;
+      font-size: .76rem;
+      letter-spacing: 1px;
+      margin-bottom: 5px;
+    }
+
+    .quiz-panel {
+      width: min(680px, 92%);
+      margin: 22px auto;
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.18);
+      display: none;
+      text-align: center;
+    }
+    .quiz-panel.open { display: block; animation: pop .25s ease; }
+    @keyframes pop { from { opacity:0; transform:scale(.96); } to { opacity:1; transform:scale(1); } }
+    #quizQuestion { color: var(--text); font-size: 1.08rem; line-height: 1.5; }
+    #quizChoices {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 9px;
+      margin-top: 14px;
+    }
+    #quizChoices button {
+      padding: 12px;
+      border: 0;
+      border-radius: 13px;
+      cursor: pointer;
+      font: 600 .95rem Fredoka, sans-serif;
+      color: #17142e;
+      background: #f9f7ff;
+    }
+    #quizChoices button:hover { transform: translateY(-2px); }
+    #quizChoices .correct { background: #94e5bd; }
+    #quizChoices .wrong { background: #ffb0a3; }
+    #quizResult { margin-top: 12px; min-height: 24px; font-weight: 700; }
+
+    .modal-open { overflow: hidden; }
+
+    @media (max-width: 650px) {
+      #quizChoices { grid-template-columns: 1fr; }
+      .floating-extra { opacity: .14; }
+    }
+
   </style>
 </head>
 <body>
@@ -296,35 +407,85 @@
       actinide: "#a9b8ff"
     };
 
-    const facts = {
-      H: ["Hydrogen is the most common element in the whole universe. Our Sun is mostly made from it!", "☀️"],
-      He: ["Helium makes balloons float because it is lighter than the air around us.", "🎈"],
-      C: ["Carbon is in bananas, pencils, your body, and even diamonds. One element can be many amazing things!", "🍌💎"],
-      N: ["About 78% of the air is nitrogen. Plants need it to grow big and green.", "🌱"],
-      O: ["You breathe oxygen every second. It helps your body turn food into energy for running and playing!", "🌬️"],
-      F: ["Fluorine is used in toothpaste to help make teeth stronger.", "🦷"],
-      Ne: ["Neon glows bright orange-red in signs. It is a favorite element for colorful city lights!", "💡"],
-      Na: ["Sodium joins chlorine to make table salt. By itself, sodium is a shiny metal that reacts with water!", "🧂"],
-      Mg: ["Magnesium makes a brilliant white light in fireworks and sparklers.", "🎆"],
-      Al: ["Aluminum is used in foil, soda cans, and airplanes because it is light but strong.", "🥫"],
-      Si: ["Silicon is found in sand and is used to make computer chips.", "🏖️💻"],
-      P: ["Phosphorus helps make matches light up and is also important for strong bones.", "🔥"],
-      S: ["Sulfur can be found near volcanoes and sometimes smells like rotten eggs!", "🌋"],
-      Cl: ["Chlorine helps keep swimming pools clean. Mixed with sodium, it becomes ordinary table salt.", "🏊"],
-      Ar: ["Argon is used inside some light bulbs to help the glowing wire last longer.", "💡"],
-      K: ["Potassium is in bananas and helps your muscles move.", "🍌"],
-      Ca: ["Calcium helps build your bones and teeth. Milk and cheese are full of it!", "🥛"],
-      Fe: ["Iron is in your blood and helps carry oxygen around your body. It is also used to build bridges!", "🩸🌉"],
-      Cu: ["Copper carries electricity through wires. Old copper can turn green, like the Statue of Liberty.", "⚡🗽"],
-      Zn: ["Zinc helps your body heal cuts and is used to protect metal from rust.", "🩹"],
-      Ag: ["Silver is shiny and helps electricity move. It is used in jewelry and some solar panels.", "🥈"],
-      I: ["Iodine is important for your body and is often added to table salt.", "🧂"],
-      Au: ["Gold is so bendy that one tiny piece can be stretched into an incredibly long wire!", "👑"],
-      Hg: ["Mercury is a metal that is liquid at room temperature. It is interesting, but never safe to touch.", "🌡️"],
-      Pb: ["Pencil “lead” is not lead at all—it is actually carbon called graphite!", "✏️"],
-      U: ["A tiny amount of uranium can hold a huge amount of energy. Scientists use it very carefully.", "⚛️"]
-    };
 
+<body>
+  <div class="stars"></div>
+  <div id="floaterLayer" aria-hidden="true"></div>
+
+  <header>
+    <div class="space-item rocket">🚀</div>
+    <div class="space-item astronaut">👩🏽‍🚀</div>
+    <div class="space-item planet">🪐</div>
+    <div class="space-item alien">👾</div>
+
+    <h1>Periodic <span>Space</span> Explorers</h1>
+    <p>
+      Explore all 118 elements! Click one to unlock a kid-friendly fact,
+      discover its superpower, and find out where it appears in the world around you.
+    </p>
+  </header>
+
+  <div class="toolbar">
+    <input id="search" type="search" placeholder="🔎 Search by element name or symbol..." aria-label="Search elements">
+    <button class="tool-btn" id="randomBtn">🎲 Surprise Me!</button>
+    <button class="tool-btn" id="quizBtn">🧠 Guess the Element</button>
+  </div>
+
+  <div class="legend">
+    <span style="background:#ffb0a3">Reactive metals</span>
+    <span style="background:#ffd36a">Other metals</span>
+    <span style="background:#94e5bd">Metalloids</span>
+    <span style="background:#7ee0ee">Nonmetals</span>
+    <span style="background:#bda4ff">Noble gases</span>
+    <span style="background:#ff9fd1">Lanthanides</span>
+    <span style="background:#a9b8ff">Actinides</span>
+  </div>
+
+  <div class="quiz-panel" id="quizPanel">
+    <div class="fact-label" style="color:#ffda52">🧠 CHEMISTRY CHALLENGE</div>
+    <div id="quizQuestion"></div>
+    <div id="quizChoices"></div>
+    <div id="quizResult"></div>
+  </div>
+
+  <main class="table-wrap">
+    <section class="periodic-table" id="periodicTable" aria-label="Periodic table"></section>
+  </main>
+
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Element flashcard">
+    <article class="flashcard" id="flashcard">
+      <button class="close" id="closeModal" aria-label="Close flashcard">×</button>
+      <div class="flashcard-top">
+        <div class="flash-symbol" id="flashSymbol"></div>
+        <h2 class="flash-name" id="flashName"></h2>
+        <p class="flash-number" id="flashNumber"></p>
+      </div>
+      <div class="flashcard-body">
+        <div class="fact-label">🌟 KID-FRIENDLY FUN FACT</div>
+        <p id="flashFact"></p>
+
+        <div class="detail-box">
+          <strong>🦸 ELEMENT SUPERPOWER</strong>
+          <div id="flashPower"></div>
+        </div>
+
+        <div class="detail-box">
+          <strong>🔎 WHERE CAN YOU FIND IT?</strong>
+          <div id="flashFound"></div>
+        </div>
+
+        <div class="fun-emoji" id="flashEmoji"></div>
+      </div>
+    </article>
+  </div>
+
+  <footer>
+    Made for young scientists, star-gazers, and question-askers. ✨
+    <br><br>
+    <button class="tool-btn" id="surpriseFact">✨ Give Me Another Element!</button>
+  </footer>
+
+<script>
     const raw = [
       ["H","Hydrogen",1,1,"nonmetal"],["He","Helium",1,18,"noble"],
       ["Li","Lithium",2,1,"metal"],["Be","Beryllium",2,2,"metal"],["B","Boron",2,13,"metalloid"],["C","Carbon",2,14,"nonmetal"],["N","Nitrogen",2,15,"nonmetal"],["O","Oxygen",2,16,"nonmetal"],["F","Fluorine",2,17,"nonmetal"],["Ne","Neon",2,18,"noble"],
@@ -337,9 +498,739 @@
       ["Th","Thorium",10,4,"actinide"],["Pa","Protactinium",10,5,"actinide"],["U","Uranium",10,6,"actinide"],["Np","Neptunium",10,7,"actinide"],["Pu","Plutonium",10,8,"actinide"],["Am","Americium",10,9,"actinide"],["Cm","Curium",10,10,"actinide"],["Bk","Berkelium",10,11,"actinide"],["Cf","Californium",10,12,"actinide"],["Es","Einsteinium",10,13,"actinide"],["Fm","Fermium",10,14,"actinide"],["Md","Mendelevium",10,15,"actinide"],["No","Nobelium",10,16,"actinide"],["Lr","Lawrencium",10,17,"actinide"]
     ];
 
+
+    const colors = {
+      metal: "#ffb0a3",
+      otherMetal: "#ffd36a",
+      metalloid: "#94e5bd",
+      nonmetal: "#7ee0ee",
+      noble: "#bda4ff",
+      lanthanide: "#ff9fd1",
+      actinide: "#a9b8ff"
+    };
+
+const kidData = {
+  "H": {
+    "emoji": "🎈",
+    "fact": "The lightest element—and a major ingredient in the Sun and stars.",
+    "power": "Super-light and packed with energy.",
+    "found": "💧 Water • ☀️ Stars • 🚀 Space"
+  },
+  "He": {
+    "emoji": "🎈",
+    "fact": "Helium is lighter than air, so it can make party balloons float.",
+    "power": "It barely reacts with other elements.",
+    "found": "🎈 Balloons • 🔬 Science labs • 🛰️ Space"
+  },
+  "Li": {
+    "emoji": "🔋",
+    "fact": "Lithium helps power many phones, tablets, laptops and electric cars.",
+    "power": "Tiny but mighty battery power.",
+    "found": "📱 Batteries • 🚗 EVs • 🔬 Labs"
+  },
+  "Be": {
+    "emoji": "🚀",
+    "fact": "Beryllium is very light and strong, which makes it useful in spacecraft.",
+    "power": "Strong without adding much weight.",
+    "found": "🚀 Spacecraft • ✈️ Aircraft • 🔬 Instruments"
+  },
+  "B": {
+    "emoji": "🫧",
+    "fact": "Boron compounds are found in borax, which can be used in some slime recipes.",
+    "power": "Helps make strong glass and ceramics.",
+    "found": "🫧 Slime ingredients • 🪟 Glass • 🌱 Plants"
+  },
+  "C": {
+    "emoji": "✏️",
+    "fact": "Carbon is in pencils, diamonds, food, trees—and even you!",
+    "power": "It can build an enormous variety of molecules.",
+    "found": "✏️ Graphite • 💎 Diamond • 🧬 Your body"
+  },
+  "N": {
+    "emoji": "🌱",
+    "fact": "About 78% of Earth's air is nitrogen, and plants need it to grow.",
+    "power": "A huge part of the air around you.",
+    "found": "🌬️ Air • 🌱 Plants • 🍎 Food"
+  },
+  "O": {
+    "emoji": "🫁",
+    "fact": "You breathe oxygen to help your body get energy from the food you eat.",
+    "power": "Helps many things burn and helps your cells make energy.",
+    "found": "🫁 Air • 💧 Water • 🌱 Plants"
+  },
+  "F": {
+    "emoji": "🦷",
+    "fact": "Fluoride compounds in toothpaste help protect your teeth from cavities.",
+    "power": "One of the most reactive elements.",
+    "found": "🦷 Toothpaste • 💧 Water treatment • 🧪 Chemistry"
+  },
+  "Ne": {
+    "emoji": "💡",
+    "fact": "Neon can glow a bright reddish-orange in signs and lights.",
+    "power": "It can shine without being burned.",
+    "found": "💡 Signs • 🔬 Tubes • 🏙️ City lights"
+  },
+  "Na": {
+    "emoji": "🧂",
+    "fact": "Sodium is part of table salt. Pure sodium is a very reactive metal.",
+    "power": "Reacts quickly with water.",
+    "found": "🧂 Salt • 🥗 Food • 🔬 Chemistry"
+  },
+  "Mg": {
+    "emoji": "✨",
+    "fact": "Magnesium can burn with a dazzling white light.",
+    "power": "Makes an amazingly bright flame.",
+    "found": "✨ Flares • 🧪 Labs • 🌱 Plants"
+  },
+  "Al": {
+    "emoji": "✈️",
+    "fact": "Aluminum is light and strong, so it is used in cans, foil and airplanes.",
+    "power": "Strong without being super heavy.",
+    "found": "🥫 Cans • ✈️ Airplanes • 🍽️ Foil"
+  },
+  "Si": {
+    "emoji": "💻",
+    "fact": "Silicon is found in sand and is essential for many computer chips.",
+    "power": "Helps make the brains of electronics possible.",
+    "found": "🏖️ Sand • 💻 Chips • 🔬 Glass"
+  },
+  "P": {
+    "emoji": "🦴",
+    "fact": "Phosphorus is important for bones, teeth and the energy used by your cells.",
+    "power": "Helps store and transfer energy in living things.",
+    "found": "🦴 Bones • 🧬 Cells • 🌱 Plants"
+  },
+  "S": {
+    "emoji": "🌋",
+    "fact": "Sulfur is yellow and can be found around volcanoes. Some sulfur compounds smell like rotten eggs!",
+    "power": "A bright yellow element with a memorable smell connection.",
+    "found": "🌋 Volcanoes • 🥚 Egg smell • 🌱 Plants"
+  },
+  "Cl": {
+    "emoji": "🏊",
+    "fact": "Chlorine helps keep swimming pools clean by killing many germs.",
+    "power": "A powerful cleaner when used in the right compounds.",
+    "found": "🏊 Pools • 🧂 Salt • 💧 Water treatment"
+  },
+  "Ar": {
+    "emoji": "💡",
+    "fact": "Argon is used inside some light bulbs because it is very unreactive.",
+    "power": "It mostly keeps to itself.",
+    "found": "💡 Light bulbs • 🧪 Labs • 🏭 Industry"
+  },
+  "K": {
+    "emoji": "🍌",
+    "fact": "Bananas contain potassium, which your nerves and muscles need.",
+    "power": "Helps your muscles and nerves work.",
+    "found": "🍌 Bananas • 🥔 Potatoes • 🧬 Body"
+  },
+  "Ca": {
+    "emoji": "🦴",
+    "fact": "Calcium helps build strong bones and teeth.",
+    "power": "A major building material for your skeleton.",
+    "found": "🥛 Milk • 🦴 Bones • 🧀 Cheese"
+  },
+  "Sc": {
+    "emoji": "🚲",
+    "fact": "Scandium can be mixed with aluminum to make strong, lightweight materials.",
+    "power": "Adds strength without adding much weight.",
+    "found": "🚲 Sports gear • ✈️ Aircraft • 🔬 Research"
+  },
+  "Ti": {
+    "emoji": "🦸",
+    "fact": "Titanium is strong, light and resistant to corrosion, so it is used in bikes and aircraft.",
+    "power": "Strong, light and tough.",
+    "found": "🚲 Bikes • ✈️ Aircraft • 🦴 Medical implants"
+  },
+  "V": {
+    "emoji": "🪛",
+    "fact": "Vanadium helps make some steels stronger and tougher.",
+    "power": "A steel-strengthening helper.",
+    "found": "🏗️ Steel • 🔧 Tools • 🚗 Machines"
+  },
+  "Cr": {
+    "emoji": "✨",
+    "fact": "Chromium helps make shiny, corrosion-resistant coatings and stainless steel.",
+    "power": "Can help metals look shiny and resist rust.",
+    "found": "✨ Chrome • 🍴 Stainless steel • 🚗 Cars"
+  },
+  "Mn": {
+    "emoji": "🔋",
+    "fact": "Manganese is used in some batteries and helps make certain steels stronger.",
+    "power": "Useful in both batteries and metal-making.",
+    "found": "🔋 Batteries • 🏗️ Steel • 🌱 Plants"
+  },
+  "Fe": {
+    "emoji": "🩸",
+    "fact": "Iron is in your blood and helps carry oxygen around your body.",
+    "power": "Can be part of blood and buildings alike.",
+    "found": "🩸 Blood • 🌉 Bridges • 🚗 Cars"
+  },
+  "Co": {
+    "emoji": "🔋",
+    "fact": "Cobalt is used in some rechargeable batteries and makes some pigments blue.",
+    "power": "A battery helper with a famous blue color connection.",
+    "found": "🔋 Batteries • 🔵 Pigments • 🔬 Magnets"
+  },
+  "Ni": {
+    "emoji": "🪙",
+    "fact": "Nickel is used in coins, stainless steel and some rechargeable batteries.",
+    "power": "Resists corrosion and works well in alloys.",
+    "found": "🪙 Coins • 🍴 Steel • 🔋 Batteries"
+  },
+  "Cu": {
+    "emoji": "⚡",
+    "fact": "Copper carries electricity through wires. The Statue of Liberty's copper skin turned green over time.",
+    "power": "An excellent electrical conductor.",
+    "found": "⚡ Wires • 🗽 Statue of Liberty • 🪙 Coins"
+  },
+  "Zn": {
+    "emoji": "🛡️",
+    "fact": "Zinc can protect steel from rust and is also an essential nutrient for your body.",
+    "power": "Acts like a protective shield for steel.",
+    "found": "🛡️ Galvanized steel • 🧬 Body • 🔋 Batteries"
+  },
+  "Ga": {
+    "emoji": "🫠",
+    "fact": "Gallium melts near body temperature, so a solid piece can melt in your warm hand.",
+    "power": "A metal that can melt in your hand.",
+    "found": "🔬 Labs • 💻 Electronics • 🌡️ Science demos"
+  },
+  "Ge": {
+    "emoji": "📡",
+    "fact": "Germanium helped early electronics and is still useful in some special semiconductors and optical devices.",
+    "power": "Can help control electrical signals.",
+    "found": "📡 Electronics • 🔬 Optics • 💻 Semiconductors"
+  },
+  "As": {
+    "emoji": "⚠️",
+    "fact": "Arsenic is a famous element from detective stories, but it is poisonous and must be handled safely.",
+    "power": "Chemistry can be useful—and dangerous.",
+    "found": "🔬 Research • 💻 Semiconductors • ⚠️ Toxic compounds"
+  },
+  "Se": {
+    "emoji": "🌞",
+    "fact": "Selenium is used in some electronics and is also needed by your body in tiny amounts.",
+    "power": "A trace nutrient with useful electrical properties.",
+    "found": "🌞 Electronics • 🧬 Body • 🔬 Labs"
+  },
+  "Br": {
+    "emoji": "🟤",
+    "fact": "Bromine is one of the few elements that is a liquid at room temperature.",
+    "power": "A reddish-brown liquid element.",
+    "found": "🔬 Labs • 🏊 Pool chemistry • 🧪 Compounds"
+  },
+  "Kr": {
+    "emoji": "💡",
+    "fact": "Krypton can be used in special lamps and flashes.",
+    "power": "A noble gas that can glow in electrical tubes.",
+    "found": "💡 Lamps • 📸 Flashes • 🔬 Research"
+  },
+  "Rb": {
+    "emoji": "⏱️",
+    "fact": "Rubidium is used in some very precise scientific clocks and research equipment.",
+    "power": "Helps scientists measure time and study physics.",
+    "found": "⏱️ Clocks • 🔬 Labs • 📡 Research"
+  },
+  "Sr": {
+    "emoji": "🎆",
+    "fact": "Strontium compounds can make fireworks burn bright red.",
+    "power": "A fireworks color-maker.",
+    "found": "🎆 Fireworks • 🔬 Research • 🧪 Compounds"
+  },
+  "Y": {
+    "emoji": "📺",
+    "fact": "Yttrium is used in some LEDs, lasers and special materials.",
+    "power": "Helps create useful colors and light technologies.",
+    "found": "📺 Displays • 🔦 Lasers • 🔬 Ceramics"
+  },
+  "Zr": {
+    "emoji": "🦷",
+    "fact": "Zirconium compounds are used in ceramics, including some dental materials.",
+    "power": "Makes tough, heat-resistant ceramics.",
+    "found": "🦷 Dental ceramics • 🏭 Industry • 🔬 Labs"
+  },
+  "Nb": {
+    "emoji": "🧲",
+    "fact": "Niobium is used in special alloys and superconducting magnets.",
+    "power": "Can help make powerful superconducting magnets.",
+    "found": "🧲 Magnets • 🚀 Alloys • 🔬 Research"
+  },
+  "Mo": {
+    "emoji": "🔥",
+    "fact": "Molybdenum can handle very high temperatures, so it is useful in tough alloys.",
+    "power": "Keeps its strength when things get hot.",
+    "found": "🔥 High-temperature parts • 🏭 Steel • 🔬 Labs"
+  },
+  "Tc": {
+    "emoji": "🏥",
+    "fact": "Technetium-99m is widely used in medical imaging to help doctors look inside the body.",
+    "power": "Helps doctors see what's happening inside.",
+    "found": "🏥 Medical imaging • 🔬 Hospitals • ⚛️ Nuclear medicine"
+  },
+  "Ru": {
+    "emoji": "💿",
+    "fact": "Ruthenium is used in electronics and some coatings because it is durable and useful in tiny amounts.",
+    "power": "A tough helper in electronics.",
+    "found": "💿 Electronics • 🧪 Catalysts • 🔬 Coatings"
+  },
+  "Rh": {
+    "emoji": "🚗",
+    "fact": "Rhodium is used in car catalytic converters to help reduce certain pollutants.",
+    "power": "Helps clean up car exhaust.",
+    "found": "🚗 Cars • ✨ Jewelry • 🧪 Catalysts"
+  },
+  "Pd": {
+    "emoji": "🚗",
+    "fact": "Palladium is used in catalytic converters and can also be used in jewelry.",
+    "power": "Helps turn some harmful exhaust gases into less harmful substances.",
+    "found": "🚗 Cars • 💍 Jewelry • 🧪 Catalysts"
+  },
+  "Ag": {
+    "emoji": "🥈",
+    "fact": "Silver is shiny and conducts electricity extremely well.",
+    "power": "One of the best electrical conductors.",
+    "found": "💍 Jewelry • ⚡ Electronics • 🪙 Coins"
+  },
+  "Cd": {
+    "emoji": "🖍️",
+    "fact": "Cadmium compounds have been used to make bright yellow, orange and red pigments.",
+    "power": "Can make very bright colors, though cadmium is toxic.",
+    "found": "🎨 Pigments • 🔋 Batteries • 🔬 Research"
+  },
+  "In": {
+    "emoji": "📱",
+    "fact": "Indium is used in transparent conductive coatings found in many touchscreens.",
+    "power": "Helps make touchscreens respond to your fingers.",
+    "found": "📱 Touchscreens • 💻 Displays • 🔬 Electronics"
+  },
+  "Sn": {
+    "emoji": "🥫",
+    "fact": "Tin is used to coat some steel cans and is part of many useful alloys.",
+    "power": "Helps protect other metals from corrosion.",
+    "found": "🥫 Cans • 🔧 Alloys • 🔬 Electronics"
+  },
+  "Sb": {
+    "emoji": "🔥",
+    "fact": "Antimony compounds have been used in flame-retardant materials and other products.",
+    "power": "Can help materials resist flames.",
+    "found": "🔥 Flame retardants • 🔋 Batteries • 🧪 Alloys"
+  },
+  "Te": {
+    "emoji": "☀️",
+    "fact": "Tellurium is used in some solar-cell materials.",
+    "power": "A small element with a role in solar technology.",
+    "found": "☀️ Solar cells • 💻 Electronics • 🔬 Materials"
+  },
+  "I": {
+    "emoji": "🧂",
+    "fact": "Iodine is needed by your body, and iodized salt is a common source.",
+    "power": "Helps your thyroid make important hormones.",
+    "found": "🧂 Iodized salt • 🌊 Seaweed • 🧬 Body"
+  },
+  "Xe": {
+    "emoji": "🚘",
+    "fact": "Xenon can produce a bright light and is used in some lamps and spacecraft ion thrusters.",
+    "power": "Can glow brightly and even help propel spacecraft.",
+    "found": "🚘 Lamps • 🚀 Spacecraft • 🔬 Research"
+  },
+  "Cs": {
+    "emoji": "⏱️",
+    "fact": "Cesium is famous for helping scientists make extremely precise atomic clocks.",
+    "power": "One of the stars of precision timekeeping.",
+    "found": "⏱️ Atomic clocks • 📡 Technology • 🔬 Labs"
+  },
+  "Ba": {
+    "emoji": "🎆",
+    "fact": "Barium compounds can make fireworks green and are also used in medical X-ray studies.",
+    "power": "A green fireworks helper.",
+    "found": "🎆 Fireworks • 🏥 X-rays • 🔬 Labs"
+  },
+  "La": {
+    "emoji": "Lanthanum",
+    "fact": "Lanthanum is used in special glass and some camera and optical materials.",
+    "power": "Helps make useful high-quality glass.",
+    "found": "📷 Camera lenses • 🔬 Optics • 🔋 Batteries"
+  },
+  "Ce": {
+    "emoji": "Cerium",
+    "fact": "Cerium compounds are used in glass polishing and some lighter flints.",
+    "power": "A handy helper for polishing and sparks.",
+    "found": "🔥 Lighter flints • 🪟 Glass • 🔬 Polishing"
+  },
+  "Pr": {
+    "emoji": "Praseodymium",
+    "fact": "Praseodymium compounds can add special colors to glass and ceramics.",
+    "power": "A color-changing materials helper.",
+    "found": "🎨 Glass • 🧲 Magnets • 🏺 Ceramics"
+  },
+  "Nd": {
+    "emoji": "Neodymium",
+    "fact": "Neodymium is used to make some of the strongest permanent magnets.",
+    "power": "Tiny magnets can be surprisingly powerful!",
+    "found": "🧲 Magnets • 🎧 Headphones • 🚲 Motors"
+  },
+  "Pm": {
+    "emoji": "Promethium",
+    "fact": "Promethium is radioactive and has been studied for specialized batteries and scientific uses.",
+    "power": "A rare element with no stable isotopes.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🛰️ Technology"
+  },
+  "Sm": {
+    "emoji": "Samarium",
+    "fact": "Samarium is used in strong magnets and some specialized electronics.",
+    "power": "A useful magnet-making element.",
+    "found": "🧲 Magnets • 🎧 Electronics • 🔬 Research"
+  },
+  "Eu": {
+    "emoji": "Europium",
+    "fact": "Europium compounds help create red colors in some screens and fluorescent materials.",
+    "power": "A famous red-light helper.",
+    "found": "📺 Displays • 💡 Lamps • 🔬 Materials"
+  },
+  "Gd": {
+    "emoji": "Gadolinium",
+    "fact": "Some gadolinium compounds are used as contrast agents for MRI scans under medical supervision.",
+    "power": "Helps doctors make certain images clearer.",
+    "found": "🏥 MRI • 🔬 Research • 🧪 Materials"
+  },
+  "Tb": {
+    "emoji": "Terbium",
+    "fact": "Terbium compounds can produce green light and are used in some electronic materials.",
+    "power": "A green-light specialist.",
+    "found": "💚 Displays • 🔊 Electronics • 🔬 Materials"
+  },
+  "Dy": {
+    "emoji": "Dysprosium",
+    "fact": "Dysprosium helps some magnets keep working at high temperatures.",
+    "power": "Helps powerful magnets handle heat.",
+    "found": "🧲 Motors • 🚗 EVs • 🔬 Magnets"
+  },
+  "Ho": {
+    "emoji": "Holmium",
+    "fact": "Holmium has very useful magnetic properties and is used in specialized lasers and magnets.",
+    "power": "A magnetic superstar for specialized technology.",
+    "found": "🔦 Lasers • 🧲 Magnets • 🔬 Research"
+  },
+  "Er": {
+    "emoji": "Erbium",
+    "fact": "Erbium is important in fiber-optic communication systems that carry internet signals.",
+    "power": "Helps send information through optical fibers.",
+    "found": "🌐 Fiber optics • 📡 Telecom • 🔬 Lasers"
+  },
+  "Tm": {
+    "emoji": "Thulium",
+    "fact": "Thulium is used in some specialized lasers and portable X-ray equipment.",
+    "power": "A rare helper for specialized technology.",
+    "found": "🔦 Lasers • 🏥 X-ray sources • 🔬 Research"
+  },
+  "Yb": {
+    "emoji": "Ytterbium",
+    "fact": "Ytterbium is used in some specialized lasers and precision scientific equipment.",
+    "power": "Helps scientists make very precise technology.",
+    "found": "🔦 Lasers • ⏱️ Clocks • 🔬 Research"
+  },
+  "Lu": {
+    "emoji": "Lutetium",
+    "fact": "Lutetium is used in some medical imaging and targeted radiotherapy applications.",
+    "power": "A rare element with important medical uses.",
+    "found": "🏥 Medicine • 🔬 Imaging • ⚛️ Nuclear science"
+  },
+  "Hf": {
+    "emoji": "Hafnium",
+    "fact": "Hafnium is useful in electronics and can handle very high temperatures.",
+    "power": "Tough enough for demanding technology.",
+    "found": "💻 Electronics • 🚀 High-temperature parts • 🔬 Research"
+  },
+  "Ta": {
+    "emoji": "Tantalum",
+    "fact": "Tantalum is used in tiny capacitors found in electronics.",
+    "power": "A little element hiding inside big technology.",
+    "found": "📱 Electronics • 💻 Computers • 🔬 Medical devices"
+  },
+  "W": {
+    "emoji": "Tungsten",
+    "fact": "Tungsten has an extremely high melting point and was used in traditional light-bulb filaments.",
+    "power": "A champion at surviving heat.",
+    "found": "💡 Light bulbs • 🛠️ Tools • 🏭 Industry"
+  },
+  "Re": {
+    "emoji": "Rhenium",
+    "fact": "Rhenium is used in superalloys for parts that must survive extreme temperatures, such as jet engines.",
+    "power": "A heat-resistant hero.",
+    "found": "✈️ Jet engines • 🚀 Aerospace • 🏭 Alloys"
+  },
+  "Os": {
+    "emoji": "Osmium",
+    "fact": "Osmium is extremely dense—it's one of the densest naturally occurring elements.",
+    "power": "Very, very heavy for its size.",
+    "found": "⚖️ Precision parts • 🔬 Research • 🧪 Alloys"
+  },
+  "Ir": {
+    "emoji": "Iridium",
+    "fact": "Iridium is highly resistant to corrosion and is used in specialized equipment and spark plugs.",
+    "power": "Extremely resistant to chemical attack.",
+    "found": "🚗 Spark plugs • 🔬 Equipment • 🛰️ Technology"
+  },
+  "Pt": {
+    "emoji": "Platinum",
+    "fact": "Platinum helps catalytic converters clean up car exhaust and is also used in jewelry.",
+    "power": "A precious metal that can also help clean exhaust.",
+    "found": "💍 Jewelry • 🚗 Cars • 🧪 Catalysts"
+  },
+  "Au": {
+    "emoji": "Gold",
+    "fact": "Gold is so easy to shape that it can be hammered into extremely thin sheets.",
+    "power": "Shiny, valuable and amazingly workable.",
+    "found": "👑 Jewelry • 💻 Electronics • 🪙 Coins"
+  },
+  "Hg": {
+    "emoji": "Mercury",
+    "fact": "Mercury is a metal that is liquid at room temperature. It is toxic, so it must be handled carefully.",
+    "power": "The famous liquid metal.",
+    "found": "🌡️ Old thermometers • 🔬 Instruments • ⚠️ Toxic"
+  },
+  "Tl": {
+    "emoji": "Thallium",
+    "fact": "Thallium is a soft metal that has been used in specialized electronics and research.",
+    "power": "A rare element with specialized uses.",
+    "found": "🔬 Research • 💻 Electronics • ⚠️ Toxic"
+  },
+  "Pb": {
+    "emoji": "Lead",
+    "fact": "Lead is very dense and has been used for radiation shielding and weights. Pencil 'lead' is actually graphite!",
+    "power": "Very dense and good at blocking some radiation.",
+    "found": "🏗️ Shielding • 🎣 Weights • ⚠️ Toxic"
+  },
+  "Bi": {
+    "emoji": "Bismuth",
+    "fact": "Bismuth crystals can grow into beautiful rainbow-colored shapes.",
+    "power": "Makes naturally colorful-looking crystals.",
+    "found": "🌈 Crystals • 🧪 Materials • 💊 Medicines"
+  },
+  "Po": {
+    "emoji": "Polonium",
+    "fact": "Polonium is a very rare radioactive element discovered by Marie Curie.",
+    "power": "A famous element from the history of radioactivity.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 📚 Chemistry history"
+  },
+  "At": {
+    "emoji": "Astatine",
+    "fact": "Astatine is extremely rare and radioactive; only tiny amounts exist naturally at any moment.",
+    "power": "One of the rarest naturally occurring elements.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🧪 Chemistry"
+  },
+  "Rn": {
+    "emoji": "Radon",
+    "fact": "Radon is a radioactive gas that can build up inside buildings, so homes can be tested for it.",
+    "power": "An invisible gas that reminds us chemistry is everywhere.",
+    "found": "🏠 Homes • 🌍 Rocks • ⚛️ Radioactivity"
+  },
+  "Fr": {
+    "emoji": "Francium",
+    "fact": "Francium is extremely rare and radioactive, with only tiny amounts found naturally.",
+    "power": "One of the rarest naturally occurring elements.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🧪 Chemistry"
+  },
+  "Ra": {
+    "emoji": "Radium",
+    "fact": "Radium is radioactive and was historically studied by Marie and Pierre Curie.",
+    "power": "An important part of the story of radioactivity.",
+    "found": "📚 Chemistry history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Ac": {
+    "emoji": "Actinium",
+    "fact": "Actinium is radioactive and gives its name to the actinide family.",
+    "power": "A glowing clue in the actinide family story.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🧪 Chemistry"
+  },
+  "Th": {
+    "emoji": "Thorium",
+    "fact": "Thorium is radioactive and has been studied as a possible nuclear-energy material.",
+    "power": "A heavy element with a lot of nuclear energy stored in its nucleus.",
+    "found": "🔬 Research • ⚛️ Energy • 🌍 Minerals"
+  },
+  "Pa": {
+    "emoji": "Protactinium",
+    "fact": "Protactinium is a rare radioactive element first identified in the early history of nuclear chemistry.",
+    "power": "A rare piece of the nuclear-chemistry puzzle.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🌍 Minerals"
+  },
+  "U": {
+    "emoji": "Uranium",
+    "fact": "Uranium is a very heavy radioactive element found naturally in rocks and used as nuclear fuel.",
+    "power": "Its nucleus can release enormous amounts of energy.",
+    "found": "🌍 Rocks • ⚛️ Nuclear energy • 🔬 Research"
+  },
+  "Np": {
+    "emoji": "Neptunium",
+    "fact": "Neptunium was the first transuranium element discovered, and it was named after Neptune.",
+    "power": "Its name follows the planet after Uranus.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🪐 Planet-inspired name"
+  },
+  "Pu": {
+    "emoji": "Plutonium",
+    "fact": "Plutonium is a radioactive element used in specialized nuclear applications and space power systems.",
+    "power": "Can provide long-lasting nuclear energy for spacecraft.",
+    "found": "🚀 Space power • ⚛️ Nuclear science • 🔬 Research"
+  },
+  "Am": {
+    "emoji": "Americium",
+    "fact": "Americium-241 is used in many household smoke detectors.",
+    "power": "A tiny amount can help a smoke alarm detect danger.",
+    "found": "🚨 Smoke detectors • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Cm": {
+    "emoji": "Curium",
+    "fact": "Curium was named after Marie and Pierre Curie and is used mainly for scientific research.",
+    "power": "Named after famous pioneers of radioactivity.",
+    "found": "📚 Science history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Bk": {
+    "emoji": "Berkelium",
+    "fact": "Berkelium was named after Berkeley, California, where it was discovered.",
+    "power": "An element named after a place where scientists made a discovery.",
+    "found": "🔬 Research • 📚 Science history • ⚛️ Nuclear science"
+  },
+  "Cf": {
+    "emoji": "Californium",
+    "fact": "Californium is radioactive and can be used as a neutron source in specialized applications.",
+    "power": "A powerful source of neutrons for specialized science.",
+    "found": "🔬 Research • ⚛️ Nuclear science • 🏭 Industry"
+  },
+  "Es": {
+    "emoji": "Einsteinium",
+    "fact": "Einsteinium was named after Albert Einstein.",
+    "power": "A chemistry tribute to a famous scientist.",
+    "found": "📚 Science history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Fm": {
+    "emoji": "Fermium",
+    "fact": "Fermium was named after physicist Enrico Fermi.",
+    "power": "Named for a scientist who helped shape nuclear physics.",
+    "found": "📚 Science history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Md": {
+    "emoji": "Mendelevium",
+    "fact": "Mendelevium honors Dmitri Mendeleev, the scientist who created the early periodic table.",
+    "power": "Its name celebrates the creator of the periodic table.",
+    "found": "📚 Periodic table • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "No": {
+    "emoji": "Nobelium",
+    "fact": "Nobelium was named after Alfred Nobel, founder of the Nobel Prizes.",
+    "power": "Named for the person behind the famous science prizes.",
+    "found": "🏆 Nobel Prize history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Lr": {
+    "emoji": "Lawrencium",
+    "fact": "Lawrencium honors Ernest Lawrence, inventor of the cyclotron.",
+    "power": "Named for a scientist who built a powerful particle accelerator.",
+    "found": "🔬 Particle physics • 📚 Science history • ⚛️ Nuclear science"
+  },
+  "Rf": {
+    "emoji": "Rutherfordium",
+    "fact": "Rutherfordium was named after Ernest Rutherford, a pioneer in understanding the atomic nucleus.",
+    "power": "Named after one of the scientists who helped reveal the atom's nucleus.",
+    "found": "📚 Science history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Db": {
+    "emoji": "Dubnium",
+    "fact": "Dubnium was named after Dubna, Russia, home to a major nuclear research center.",
+    "power": "An element named after a city famous for nuclear research.",
+    "found": "🌍 Dubna • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Sg": {
+    "emoji": "Seaborgium",
+    "fact": "Seaborgium honors Glenn T. Seaborg, a major contributor to the discovery of transuranium elements.",
+    "power": "Named after a scientist who helped expand the periodic table.",
+    "found": "📚 Science history • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Bh": {
+    "emoji": "Bohrium",
+    "fact": "Bohrium was named after physicist Niels Bohr, whose ideas helped explain atomic structure.",
+    "power": "A tribute to a giant of atomic physics.",
+    "found": "📚 Atomic science • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Hs": {
+    "emoji": "Hassium",
+    "fact": "Hassium was named after Hesse, a state in Germany where the discovery work took place.",
+    "power": "An element named after a place.",
+    "found": "🌍 Germany • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Mt": {
+    "emoji": "Meitnerium",
+    "fact": "Meitnerium honors physicist Lise Meitner, a pioneer in nuclear physics.",
+    "power": "Named after a pioneering woman in nuclear science.",
+    "found": "👩‍🔬 Lise Meitner • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Ds": {
+    "emoji": "Darmstadtium",
+    "fact": "Darmstadtium was named after Darmstadt, Germany, where it was discovered.",
+    "power": "Another element named after its discovery location.",
+    "found": "🌍 Darmstadt • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Rg": {
+    "emoji": "Roentgenium",
+    "fact": "Roentgenium honors Wilhelm Röntgen, who discovered X-rays.",
+    "power": "Named for the scientist behind X-rays.",
+    "found": "🩻 X-rays • 📚 Science history • 🔬 Research"
+  },
+  "Cn": {
+    "emoji": "Copernicium",
+    "fact": "Copernicium was named after Nicolaus Copernicus, who proposed that Earth moves around the Sun.",
+    "power": "A chemistry tribute to a famous astronomer.",
+    "found": "🔭 Astronomy • 📚 Science history • ⚛️ Nuclear science"
+  },
+  "Nh": {
+    "emoji": "Nihonium",
+    "fact": "Nihonium was named by Japanese scientists; 'Nihon' means Japan in Japanese.",
+    "power": "The first element named by scientists in Japan.",
+    "found": "🇯🇵 Japan • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Fl": {
+    "emoji": "Flerovium",
+    "fact": "Flerovium was named after the Flerov Laboratory of Nuclear Reactions.",
+    "power": "Named for a major nuclear research laboratory.",
+    "found": "🔬 Research • 📚 Science history • ⚛️ Nuclear science"
+  },
+  "Mc": {
+    "emoji": "Moscovium",
+    "fact": "Moscovium was named after the Moscow region of Russia.",
+    "power": "An element named after a region where important research was done.",
+    "found": "🌍 Moscow region • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Lv": {
+    "emoji": "Livermorium",
+    "fact": "Livermorium was named after Lawrence Livermore National Laboratory in California.",
+    "power": "An element named after a famous research laboratory.",
+    "found": "🔬 Laboratory • 🌍 California • ⚛️ Nuclear science"
+  },
+  "Ts": {
+    "emoji": "Tennessine",
+    "fact": "Tennessine was named after the U.S. state of Tennessee, home to important research institutions.",
+    "power": "One of the elements named after a U.S. state.",
+    "found": "🇺🇸 Tennessee • 🔬 Research • ⚛️ Nuclear science"
+  },
+  "Og": {
+    "emoji": "Oganesson",
+    "fact": "Oganesson honors physicist Yuri Oganessian, who helped discover several superheavy elements.",
+    "power": "One of the newest elements on the periodic table.",
+    "found": "👨‍🔬 Science • 🔬 Research • ⚛️ Nuclear science"
+  }
+};
+
     const table = document.querySelector("#periodicTable");
     const modal = document.querySelector("#modal");
     const flashcard = document.querySelector("#flashcard");
+    const search = document.querySelector("#search");
+    const randomBtn = document.querySelector("#randomBtn");
+    const surpriseFact = document.querySelector("#surpriseFact");
+    const quizBtn = document.querySelector("#quizBtn");
+    const quizPanel = document.querySelector("#quizPanel");
+    const quizQuestion = document.querySelector("#quizQuestion");
+    const quizChoices = document.querySelector("#quizChoices");
+    const quizResult = document.querySelector("#quizResult");
 
     const label1 = document.createElement("div");
     label1.className = "lanthanide-label";
@@ -351,51 +1242,146 @@
     label2.textContent = "Actinides →";
     table.appendChild(label2);
 
+    const buttons = [];
+
     raw.forEach(([symbol, name, row, col, type], index) => {
       const atomicNumber = index + 1;
       const button = document.createElement("button");
-
       button.className = "element";
+      button.dataset.symbol = symbol;
+      button.dataset.name = name.toLowerCase();
       button.style.setProperty("--row", row);
       button.style.setProperty("--col", col);
       button.style.setProperty("--color", colors[type]);
+
+      const d = kidData[symbol] || {
+        emoji: "🔭",
+        fact: `${name} is element number ${atomicNumber}. Scientists use the periodic table as a map of the building blocks of matter!`,
+        power: "Scientists are still learning more about it.",
+        found: "🔬 Scientific research"
+      };
+
       button.innerHTML = `
         <span class="number">${atomicNumber}</span>
         <span class="symbol">${symbol}</span>
         <span class="name">${name}</span>
       `;
 
-      button.addEventListener("click", () => {
-        const customFact = facts[symbol];
-        const fact = customFact
-          ? customFact[0]
-          : `${name} is element number ${atomicNumber}. Scientists use the periodic table like a giant map for discovering what everything is made of!`;
-        const emoji = customFact ? customFact[1] : "🔭";
-
-        flashcard.style.setProperty("--card-color", colors[type]);
-        document.querySelector("#flashSymbol").textContent = symbol;
-        document.querySelector("#flashName").textContent = name;
-        document.querySelector("#flashNumber").textContent = `Atomic number ${atomicNumber}`;
-        document.querySelector("#flashFact").textContent = fact;
-        document.querySelector("#flashEmoji").textContent = emoji;
-        modal.classList.add("open");
-      });
-
+      button.addEventListener("click", () => openElement(symbol, name, atomicNumber, type));
       table.appendChild(button);
+      buttons.push(button);
     });
+
+    function openElement(symbol, name, atomicNumber, type) {
+      const d = kidData[symbol] || {
+        emoji: "🔭",
+        fact: `${name} is element number ${atomicNumber}. Scientists use the periodic table as a map of the building blocks of matter!`,
+        power: "Scientists are still learning more about it.",
+        found: "🔬 Scientific research"
+      };
+
+      flashcard.style.setProperty("--card-color", colors[type]);
+      document.querySelector("#flashSymbol").textContent = d.emoji + " " + symbol;
+      document.querySelector("#flashName").textContent = name;
+      document.querySelector("#flashNumber").textContent =
+        `Atomic number ${atomicNumber} • Explore this element!`;
+      document.querySelector("#flashFact").textContent = d.fact;
+      document.querySelector("#flashEmoji").textContent = d.emoji;
+      document.querySelector("#flashPower").textContent = d.power;
+      document.querySelector("#flashFound").textContent = d.found;
+      modal.classList.add("open");
+      document.body.classList.add("modal-open");
+    }
 
     function closeModal() {
       modal.classList.remove("open");
+      document.body.classList.remove("modal-open");
     }
 
     document.querySelector("#closeModal").addEventListener("click", closeModal);
-    modal.addEventListener("click", (event) => {
-      if (event.target === modal) closeModal();
+    modal.addEventListener("click", e => {
+      if (e.target === modal) closeModal();
     });
 
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeModal();
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeModal();
     });
+
+    search.addEventListener("input", () => {
+      const q = search.value.trim().toLowerCase();
+      buttons.forEach(btn => {
+        const match = !q || btn.dataset.symbol.toLowerCase().includes(q) || btn.dataset.name.includes(q);
+        btn.classList.toggle("dimmed", !match);
+        btn.classList.toggle("found", !!q && match);
+      });
+    });
+
+    randomBtn.addEventListener("click", () => {
+      const item = raw[Math.floor(Math.random() * raw.length)];
+      const index = raw.findIndex(x => x[0] === item[0]);
+      openElement(item[0], item[1], index + 1, item[4]);
+    });
+
+    surpriseFact.addEventListener("click", () => {
+      const item = raw[Math.floor(Math.random() * raw.length)];
+      const index = raw.findIndex(x => x[0] === item[0]);
+      openElement(item[0], item[1], index + 1, item[4]);
+    });
+
+    const quizFacts = raw.filter(x => kidData[x[0]]);
+    let currentQuiz;
+
+    quizBtn.addEventListener("click", startQuiz);
+
+    function startQuiz() {
+      quizPanel.classList.add("open");
+      quizResult.textContent = "";
+      currentQuiz = quizFacts[Math.floor(Math.random() * quizFacts.length)];
+      const [symbol, name] = currentQuiz;
+      const fact = kidData[symbol].fact;
+
+      quizQuestion.textContent = `Which element matches this clue? “${fact}”`;
+
+      const choices = [currentQuiz];
+      while (choices.length < 4) {
+        const candidate = quizFacts[Math.floor(Math.random() * quizFacts.length)];
+        if (!choices.some(x => x[0] === candidate[0])) choices.push(candidate);
+      }
+      choices.sort(() => Math.random() - 0.5);
+
+      quizChoices.innerHTML = "";
+      choices.forEach(choice => {
+        const b = document.createElement("button");
+        b.textContent = `${choice[0]} — ${choice[1]}`;
+        b.addEventListener("click", () => {
+          if (choice[0] === symbol) {
+            quizResult.textContent = "🎉 Correct! You're becoming a chemistry explorer!";
+            b.classList.add("correct");
+          } else {
+            quizResult.textContent = `💫 Not quite! The answer is ${symbol} — ${name}.`;
+            b.classList.add("wrong");
+          }
+          setTimeout(startQuiz, 1300);
+        });
+        quizChoices.appendChild(b);
+      });
+    }
+
+    // Extra floating chemistry/space objects.
+    const floaters = ["⚛️","🧪","🔬","🧬","🪐","🚀","⭐","🌙","🧲","💎","🧫","☄️","👾","🛰️","✨","🌈"];
+    const floaterLayer = document.querySelector("#floaterLayer");
+    floaters.forEach((emoji, i) => {
+      const el = document.createElement("span");
+      el.className = "floating-extra";
+      el.textContent = emoji;
+      el.style.left = `${4 + ((i * 17) % 92)}%`;
+      el.style.top = `${9 + ((i * 29) % 78)}%`;
+      el.style.setProperty("--delay", `${(i * .43) % 4}s`);
+      el.style.setProperty("--duration", `${5 + (i % 4)}s`);
+      el.style.setProperty("--drift", `${8 + (i % 4) * 5}px`);
+      floaterLayer.appendChild(el);
+    });
+
   </script>
 </body>
 </html>
