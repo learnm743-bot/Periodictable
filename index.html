@@ -341,6 +341,33 @@
 
     .modal-open { overflow: hidden; }
 
+    .legend-btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 13px;
+      font: inherit;
+      font-weight: 800;
+      color: #17172b;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.12);
+      transition: transform .18s ease, opacity .18s ease, box-shadow .18s ease;
+    }
+
+    .legend-btn:hover { transform: translateY(-2px); }
+    .legend-btn.active {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(255,255,255,.35);
+    }
+
+    .element.category-dimmed { opacity: .16; filter: grayscale(.7); }
+    .element.category-highlight {
+      opacity: 1;
+      transform: scale(1.06);
+      z-index: 3;
+      box-shadow: 0 0 0 3px #fff, 0 0 18px rgba(255,255,255,.75);
+    }
+
+
     @media (max-width: 650px) {
       #quizChoices { grid-template-columns: 1fr; }
       .floating-extra { opacity: .14; }
@@ -406,14 +433,14 @@
     <button class="tool-btn" id="quizBtn">🧠 Guess the Element</button>
   </div>
 
-  <div class="legend">
-    <span style="background:#ffb0a3">Reactive metals</span>
-    <span style="background:#ffd36a">Other metals</span>
-    <span style="background:#94e5bd">Metalloids</span>
-    <span style="background:#7ee0ee">Nonmetals</span>
-    <span style="background:#bda4ff">Noble gases</span>
-    <span style="background:#ff9fd1">Lanthanides</span>
-    <span style="background:#a9b8ff">Actinides</span>
+  <div class="legend" aria-label="Element groups">
+    <button class="legend-btn" data-type="metal" style="background:#ffb0a3">Reactive metals</button>
+    <button class="legend-btn" data-type="otherMetal" style="background:#ffd36a">Other metals</button>
+    <button class="legend-btn" data-type="metalloid" style="background:#94e5bd">Metalloids</button>
+    <button class="legend-btn" data-type="nonmetal" style="background:#7ee0ee">Nonmetals</button>
+    <button class="legend-btn" data-type="noble" style="background:#bda4ff">Noble gases</button>
+    <button class="legend-btn" data-type="lanthanide" style="background:#ff9fd1">Lanthanides</button>
+    <button class="legend-btn" data-type="actinide" style="background:#a9b8ff">Actinides</button>
   </div>
 
   <div class="fun-hint">
@@ -460,9 +487,7 @@
   </div>
 
   <footer>
-    Made for young scientists, star-gazers, and question-askers. ✨
-    <br><br>
-    <button class="tool-btn" id="surpriseFact">✨ Give Me Another Element!</button>
+    Made for young scientists ✨
   </footer>
 
 <script>
@@ -1207,7 +1232,6 @@ const kidData = {
     const flashcard = document.querySelector("#flashcard");
     const search = document.querySelector("#search");
     const randomBtn = document.querySelector("#randomBtn");
-    const surpriseFact = document.querySelector("#surpriseFact");
     const quizBtn = document.querySelector("#quizBtn");
     const quizPanel = document.querySelector("#quizPanel");
     const quizQuestion = document.querySelector("#quizQuestion");
@@ -1289,6 +1313,32 @@ const kidData = {
       if (e.key === "Escape") closeModal();
     });
 
+    // Click a legend button to highlight that element group.
+    const legendButtons = document.querySelectorAll(".legend-btn");
+    let activeCategory = null;
+
+    legendButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        const type = btn.dataset.type;
+
+        // Clicking the active category again clears the highlight.
+        if (activeCategory === type) {
+          activeCategory = null;
+          legendButtons.forEach(b => b.classList.remove("active"));
+          buttons.forEach(el => el.classList.remove("category-dimmed", "category-highlight"));
+          return;
+        }
+
+        activeCategory = type;
+        legendButtons.forEach(b => b.classList.toggle("active", b === btn));
+        buttons.forEach(el => {
+          const matches = raw.find(item => item[0] === el.dataset.symbol)?.[4] === type;
+          el.classList.toggle("category-highlight", matches);
+          el.classList.toggle("category-dimmed", !matches);
+        });
+      });
+    });
+
     search.addEventListener("input", () => {
       const q = search.value.trim().toLowerCase();
       buttons.forEach(btn => {
@@ -1299,11 +1349,6 @@ const kidData = {
     });
 
     randomBtn.addEventListener("click", () => {
-      const item = raw[Math.floor(Math.random() * raw.length)];
-      openElement(item[0], item[1], atomicNumbers[item[0]], item[4]);
-    });
-
-    surpriseFact.addEventListener("click", () => {
       const item = raw[Math.floor(Math.random() * raw.length)];
       openElement(item[0], item[1], atomicNumbers[item[0]], item[4]);
     });
@@ -1332,13 +1377,13 @@ const kidData = {
       quizChoices.innerHTML = "";
       choices.forEach(choice => {
         const b = document.createElement("button");
-        b.textContent = `${choice[0]} — ${choice[1]}`;
+        b.textContent = choice[0];
         b.addEventListener("click", () => {
           if (choice[0] === symbol) {
             quizResult.textContent = "🎉 Correct! You're becoming a chemistry explorer!";
             b.classList.add("correct");
           } else {
-            quizResult.textContent = `💫 Not quite! The answer is ${symbol} — ${name}.`;
+            quizResult.textContent = `💫 Not quite! The answer is ${symbol}.`;
             b.classList.add("wrong");
           }
           setTimeout(startQuiz, 1300);
